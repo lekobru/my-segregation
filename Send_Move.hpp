@@ -6,7 +6,7 @@ void Redirected_Send_Move()
 
 		void Construct(__int8* Data, unsigned __int32 Size)
 		{
-			Byte_Manager::Set_Bytes(0, Message, sizeof(Message), 0);
+			Byte_Manager::Set_Bytes(1, Message, sizeof(Message), 0);
 
 			*(void**)Message = (void*)539887964;
 
@@ -64,7 +64,7 @@ void Redirected_Send_Move()
 
 	*(__int32*)((unsigned __int32)Network_Channel + 28) = 0;
 
-	using Send_Network_Message_Type = void(__thiscall*)(void* Network_Channel, void* Message, void* Unknown_Parameter);
+	using Send_Message_Type = void(__thiscall*)(void* Network_Channel, void* Message, void* Unknown_Parameter);
 
-	Send_Network_Message_Type(537917776)(Network_Channel, &Message, nullptr);
+	Send_Message_Type(537917776)(Network_Channel, &Message, nullptr);
 }

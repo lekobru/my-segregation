@@ -69,15 +69,15 @@ __int8 Bruteforce_Angles_Count;
 
 float* Bruteforce_Angles;
 
-void Bruteforce_Set_Angles(Interface_Structure* Console_Variable)
+void Bruteforce_Set_Angles(Interface_Structure* Interface)
 {
 	Bruteforce_Angles_Count = 1;
 
-	Bruteforce_Angles = (float*)realloc(Bruteforce_Angles, Bruteforce_Angles_Count * sizeof(Bruteforce_Angles));
+	Bruteforce_Angles = (float*)__builtin_realloc(Bruteforce_Angles, Bruteforce_Angles_Count * sizeof(Bruteforce_Angles));
 
-	Bruteforce_Angles[Bruteforce_Angles_Count - 1] = atof(Console_Variable->String);
+	Bruteforce_Angles[Bruteforce_Angles_Count - 1] = atof(Interface->String);
 
-	char* String = strchr(Console_Variable->String, ',');
+	char* String = __builtin_strchr(Interface->String, ',');
 
 	Set_Bruteforce_Angles_Label:
 	{
@@ -85,13 +85,13 @@ void Bruteforce_Set_Angles(Interface_Structure* Console_Variable)
 		{
 			Bruteforce_Angles_Count += 1;
 
-			Bruteforce_Angles = (float*)realloc(Bruteforce_Angles, Bruteforce_Angles_Count * sizeof(Bruteforce_Angles));
+			Bruteforce_Angles = (float*)__builtin_realloc(Bruteforce_Angles, Bruteforce_Angles_Count * sizeof(Bruteforce_Angles));
 
 			String = (char*)((unsigned __int32)String + 1);
 
 			Bruteforce_Angles[Bruteforce_Angles_Count - 1] = atof(String);
 
-			String = strchr(String, ',');
+			String = __builtin_strchr(String, ',');
 
 			goto Set_Bruteforce_Angles_Label;
 		}
