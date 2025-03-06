@@ -60,6 +60,10 @@
 
 #include "Precache.hpp"
 
+#include "Paint_Traverse.hpp"
+
+
+
 __int32 __stdcall DllMain(HMODULE This_Module, unsigned __int32 Call_Reason, void* Reserved)
 {
 	if (Call_Reason == DLL_PROCESS_DETACH)
@@ -297,7 +301,10 @@ __int32 __stdcall DllMain(HMODULE This_Module, unsigned __int32 Call_Reason, voi
 
 				_putws(L"[ + ] View Effects");
 				{
-					Byte_Manager::Set_Bytes(0, (void*)604082898, 34, 144);
+					Byte_Manager::Set_Bytes(1, (void*)604082898, 34, 144);
+					interfaces::vgui_ipanel = global_utils::get_interface<void>("vgui2.dll", "VGUI_Panel009");
+					panel_hook = std::make_unique<vmt>(interfaces::vgui_ipanel);
+					panel_hook->hook(40, Redirected_Paint_Traverse); //hook paint trev
 				}
 
 				_putws(L"[ + ] Crosshair");
