@@ -8,6 +8,10 @@
 
 #include "matrix.hpp"
 
+unsigned long Esp_Font;
+unsigned long Esp_Font1;
+unsigned long Indicator_Font;
+
 
 bool world2screen(const vec3_t& pos, vec3_t& output)
 {
@@ -47,15 +51,62 @@ bool world2screen(const vec3_t& pos, vec3_t& output)
 }
 
 
-
-
 const char* get_panel_name(unsigned int vgui_panel)
 {
-	typedef const char*(__thiscall* o_fn)(void*, unsigned int);
+	typedef const char* (__thiscall* o_fn)(void*, unsigned int);
 	return global_utils::v_function<o_fn>(interfaces::vgui_ipanel, 35)(interfaces::vgui_ipanel, vgui_panel);
 }
 
+/*
+* flags
+* 0 - align left
+* 1 - right
+* 2 - x center
+* 3 - y center
+*/
+void Draw_Text(unsigned long Font, __int32 Flags, __int32 X, __int32 Y, __int32 Red, __int32 Green, __int32 Blue, __int32 Alpha, char* String, ...)
+{
+	void* Surface = *(void**)608279384;
 
+	va_list VaList;
+	char Buffer[1024];
+	wchar_t WBuffer[1024];
+
+	va_start(VaList, String);
+	vsprintf(Buffer, String, VaList);
+	va_end(VaList);
+
+	MultiByteToWideChar(CP_UTF8, 0, Buffer, 256, WBuffer, 256);
+
+	using Draw_Set_Text_Font_Type = void(__thiscall**)(void* Surface, unsigned long Font);
+
+	(*Draw_Set_Text_Font_Type(*(unsigned __int32*)Surface + 68))(Surface, Esp_Font);
+
+	__int32 Wide, Tall;
+
+	using Get_Text_Size_Type = void(__thiscall**)(void* Surface, unsigned long Font, wchar_t* Text, __int32& Wide, __int32& Tall);
+
+	(*Get_Text_Size_Type(*(unsigned __int32*)Surface + 288))(Surface, Esp_Font, WBuffer, Wide, Tall);
+
+	if (Flags & 1)
+		X -= Wide;
+	if (Flags & 2)
+		X -= Wide / 2;
+	if (Flags & 3)
+		Y -= Tall / 2;
+
+	using Draw_Set_Text_Color_Type = void(__thiscall**)(void* Surface, __int32 Red, __int32 Green, __int32 Blue, __int32 Alpha);
+
+	(*Draw_Set_Text_Color_Type(*(unsigned __int32*)Surface + 76))(Surface, Red, Green, Blue, Alpha);
+
+	using Draw_Set_Text_Pos_Type = void(__thiscall**)(void* Surface, __int32 X, __int32 Y);
+
+	(*Draw_Set_Text_Pos_Type(*(unsigned __int32*)Surface + 80))(Surface, X, Y);
+
+	using Draw_Print_Text_Type = void(__thiscall**)(void* Surface, wchar_t* Text, __int32 Length, __int32 Unknown1);
+
+	(*Draw_Print_Text_Type(*(unsigned __int32*)Surface + 88))(Surface, WBuffer, wcslen(WBuffer), 0);
+}
 
 
 void draw_esp()
@@ -65,18 +116,14 @@ void draw_esp()
 	if (!Local_Player)
 		return;
 
-	if (*(__int8*)((unsigned __int32)Local_Player + 135) != 0)
-		return;
-
 	void* Surface = *(void**)608279384;
 
 	using Set_Color_Type = void(__thiscall**)(void* Surface, unsigned __int8 Red, unsigned __int8 Green, unsigned __int8 Blue, unsigned __int8 Alpha);
 
 	using Draw_Filled_Rect_Type = void(__thiscall**)(void* Surface, int x01, int y01, int x02, int y02);
-	using Draw_OutLined_Rect_Type = void(__thiscall**)(void* Surface, int x01, int y01, int x02, int y02);
 
-	for (int Entity_Number = 0; Entity_Number < 64; ++Entity_Number)
-	{
+
+	for (int Entity_Number = 1; Entity_Number < (*(Global_Variables_Structure**)607726732)->Maximum_Clients; ++Entity_Number) {
 		void* Entity = *(void**)((unsigned __int32)607973860 + ((Entity_Number - 4097) << 4));
 
 		if (!Entity || *(__int8*)((unsigned __int32)Entity + 135) != 0)
@@ -85,8 +132,8 @@ void draw_esp()
 		if (*(__int32*)((unsigned __int32)Entity + 144) == *(__int32*)((unsigned __int32)Local_Player + 144))
 			continue;
 
-		//if (*(__int8*)((unsigned __int32)Entity + 320) != 0)
-			//continue;
+		if (*(__int8*)((unsigned __int32)Entity + 320) != 0)
+			continue;
 
 
 		Player_Data_Structure* Player_Data = &Players_Data[Entity_Number];
@@ -100,13 +147,14 @@ void draw_esp()
 			continue;
 
 
-		if (Entity && Entity != Local_Player)
-		{
+		if (Entity && Entity != Local_Player) {
+
 			vec3_t* Entity_Origin = reinterpret_cast<vec3_t*>((unsigned __int32)Entity + 668);
 
 			vec3_t bottom_position, top_position;
 
 			vec3_t copy = *Entity_Origin;
+
 
 			if (!world2screen(*Entity_Origin, bottom_position) || !world2screen(copy + vec3_t(0, 0, 72), top_position))
 				continue;
@@ -114,33 +162,19 @@ void draw_esp()
 			float height = bottom_position.y - top_position.y;
 			float half_width = height * .31f;
 
-			if (health > 0)
-			{
-				int Scale = health * 2.55f;
+			using Get_Name_Type = void(__thiscall*)(void* Engine, __int32 Number, char* Name);
 
-				//(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 0, 0, 255);
-				//(*Draw_OutLined_Rect_Type(*(unsigned __int32*)Surface + 60))(Surface, top_position.x - half_width - 7, top_position.y - 1, top_position.x - half_width - 7 + 5, top_position.y - 1 + (height + 2));
+			char Name[132];
 
-				(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, (255 - Scale), Scale, 0, 255);
-				(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 6, top_position.y, top_position.x - half_width - 6 + 1, top_position.y + height);
+			Get_Name_Type(537018208)((void*)540435380, Entity_Number, Name);
 
-				(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, (255 - Scale), Scale, 0, 255);
-				(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 5, top_position.y, top_position.x - half_width - 6 + 1, top_position.y + height);
-
-				(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, (255 - Scale), Scale, 0, 255);
-				(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 4, top_position.y, top_position.x - half_width - 6 + 1, top_position.y + height);
-
-				//(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 0, 0, 255);
-				//(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 6, top_position.y, top_position.x - half_width - 6 + 3, top_position.y + ((100 - health) * (height / 100)));
-			}
+			Draw_Text(Esp_Font, 2, (top_position.x - half_width) + half_width, top_position.y - 8, 255, 255, 255, 255, Name);
 
 			(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 255, 255, 255, 255);
 
 			(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width, top_position.y, bottom_position.x + half_width, bottom_position.y);
 
-			(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 255, 255, 255, 255);
 
-			(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width, top_position.y, bottom_position.x + half_width, bottom_position.y);
 
 			(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 0, 0, 255);
 
@@ -149,10 +183,36 @@ void draw_esp()
 			(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 0, 0, 255);
 
 			(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width + 1, top_position.y + 1, bottom_position.x + half_width - 1, bottom_position.y - 1);
+
+
+			using Get_Weapon_Type = void* (__thiscall*)(void* Entity);
+
+			void* Weapon = Get_Weapon_Type(604036352)(Entity);
+
+			if (!Weapon)
+				continue;
+
+			using Get_Weapon_Name_Type = char* (__thiscall**)(void* Weapon);
+
+			Draw_Text(Esp_Font, 2, (top_position.x - half_width) + half_width, bottom_position.y + 7, 255, 255, 255, 255, (*Get_Weapon_Name_Type(*(unsigned __int32*)Weapon + 1040))(Weapon) + 7);
+
+
+			if (health > 0)
+			{
+				int Scale = health * 2.55f;
+				auto iSizeH = (int)std::round(((height)*health) / 100);
+				auto iRealH = height - iSizeH;
+				//outline
+				(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 0, 0, 255);
+				(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 6, top_position.y + iRealH, top_position.x - half_width - 5 + 4, top_position.y + iRealH + iSizeH);
+				//green
+				(*Set_Color_Type(*(unsigned __int32*)Surface + 44))(Surface, 0, 225, 0, 255);
+				(*Draw_Filled_Rect_Type(*(unsigned __int32*)Surface + 56))(Surface, top_position.x - half_width - 5, top_position.y + iRealH, top_position.x - half_width - 5 + 2, top_position.y + iRealH + iSizeH);
+				
+			}
 		}
 	}
 }
-
 
 typedef void(__thiscall* paint_traverse_t) (void*, unsigned int, bool, bool);
 
@@ -162,117 +222,22 @@ void __thiscall Redirected_Paint_Traverse(void* thisptr, unsigned int vgui_panel
 
 	o_paint_traverse(thisptr, vgui_panel, force_repaint, allow_force);
 
-
 	const char* panel_name = get_panel_name(vgui_panel);
 
-	if (panel_name && panel_name[0] == 'M' && panel_name[3] == 'S' && panel_name[9] == 'T') {
-		draw_esp(); //# draw esp
-	}
-}
-
-void* Create_Material(__int8 shouldIgnoreZ, __int8 isLit, __int8 isWireframe) {
-	static __int32 Created = 0;
-
-	static std::string Tmp{
-		"\"%s\"\
-        \n{\
-        \n\t\"$basetexture\" \"vgui/white_additive\"\
-        \n\t\"$envmap\" \"\"\
-        \n\t\"$model\" \"1\"\
-        \n\t\"$nocull\" \"0\"\
-        \n\t\"$selfillum\" \"1\"\
-        \n\t\"$halflambert\" \"1\"\
-        \n\t\"$nofog\" \"0\"\
-        \n\t\"$ignorez\" \"%i\"\
-        \n\t\"$znearer\" \"0\"\
-        \n\t\"$wireframe\" \"%i\"\
-        \n}\n"
-	};
-
-	char Material[512];
-	sprintf(Material, Tmp.c_str(), "VertexLitGeneric", (shouldIgnoreZ) ? 1 : 0, (isWireframe) ? 1 : 0);
-
-	char Name[512];
-	sprintf(Name, "#Error_Chams%i.vmt", Created);
-	++Created;
-
-	void* Key_Values = malloc(0x24);
-
-	using Key_Values_Type = void(__thiscall*)(void* Key_Values, char* Name);
-	Key_Values_Type(0x20222360)(Key_Values, "VertexLitGeneric");
-
-	using Load_From_Buffer_Type = __int8(__thiscall*)(void* Key_Values, char*, char*, void*, char*);
-	Load_From_Buffer_Type(0x202250C0)(Key_Values, Name, Material, nullptr, nullptr);
-
-	using Create_Material_Type = void* (__thiscall*)(void* Material_System, char* Name, void* Key_Values);
-	void* Created_Material = Create_Material_Type(*(DWORD*)(**(DWORD**)0x24419508 + 0x1EC))(*(void**)0x24419508, Name, Key_Values);
-
-	return Created_Material;
-}
-
-void* Original_Draw_Model;
-
-void __thiscall Draw_Model(void* Studio_Render, void* Model_Info, void* a, void* b, void* d, __int32 Unknown_Parameter_6) {
-	static void* CoveredLit = Create_Material(true, true, false);
-	static void* OpenLit = Create_Material(false, true, false);
-	static void* CoveredFlat = Create_Material(true, false, false);
-	static void* OpenFlat = Create_Material(false, false, false);
-
-	void* Entity = *(void**)((unsigned __int32)Model_Info + 0x18);
-
-	if (!Entity)
-		return (decltype(&Draw_Model)(Original_Draw_Model))(Studio_Render, Model_Info, a, b, d, Unknown_Parameter_6);
-
-	auto Model = (*(void* (__thiscall**)(void*))(*(DWORD*)Entity + 32))(Entity);
-
-	using Get_Model_Name_Type = char* (__thiscall*)(void* Model_Info, void* Model);
-
-	char* Model_Name = Get_Model_Name_Type(0x200F5320)(*(void**)0x243BEA84, Model);
-
-	using Forced_Material_Override_Type = void(__thiscall*)(void* Model_Render, void* Material, __int32 Type);
-
-	using Set_Color_Modulation_Type = void(__thiscall*)(void* Render_View, float*);
-
-	if (Interface_Chams.Integer == 1 && (strstr(Model_Name, "models/player/") ))
+	if (panel_name && panel_name[0] == 'M' && panel_name[3] == 'S' && panel_name[9] == 'T')
 	{
-		float Color[4] = { };
+		draw_esp(); //# draw esp
 
-		if (strstr(Model_Name, "ct_"))
+		void* Local_Player = *(void**)607867332;
+
+		if (Local_Player)
 		{
-			// Si el modelo pertenece a los contra-terroristas, establecer el color azul para las chams
-			Color[0] = 75.f * (1.0f / 255.0f);  // Rojo
+			float* Velocity = (float*)((unsigned __int32)Local_Player + 224);
 
-			Color[1] = 208.f * (1.0f / 255.0f);    // Verde
+			float Velocity_Corrected = __builtin_sqrtf(Velocity[0] * Velocity[0] + Velocity[1] * Velocity[1] + Velocity[2] * Velocity[2]);
 
-			Color[2] = 162.f * (1.0f / 255.0f);    // Azul
-
-			Color[3] = 75.f * (1.0f / 255.0f);  // Alpha (opacidad)
+			Draw_Text(Indicator_Font, 0, 5, 700, 255, 255, 255, 255, (char*)"%0.f VEL", Velocity_Corrected);
 		}
-		else if (strstr(Model_Name, "t_"))
-		{
-			// Si el modelo pertenece a los terroristas, establecer el color rojo para las chams
-			Color[0] = 255.f * (1.0f / 255.0f);  // Rojo
-
-			Color[1] = 150.f * (1.0f / 255.0f);    // Verde
-
-			Color[2] = 255.f * (1.0f / 255.0f);    // Azul
-
-			Color[3] = 75.f * (1.0f / 255.0f);  // Alpha (opacidad)
-
-		}
-
-		Set_Color_Modulation_Type(0x2C001FD0)(Studio_Render, Color);
-
-		Forced_Material_Override_Type(0x2C007440)(Studio_Render, CoveredLit, 0);
-
-		(decltype(&Draw_Model)(Original_Draw_Model))(Studio_Render, Model_Info, a, b, d, Unknown_Parameter_6);
-
-		Forced_Material_Override_Type(0x2C007440)(Studio_Render, OpenLit, 0);
 	}
-	else
-		Forced_Material_Override_Type(0x2C007440)(Studio_Render, nullptr, 0);
-
-	(decltype(&Draw_Model)(Original_Draw_Model))(Studio_Render, Model_Info, a, b, d, Unknown_Parameter_6);
-
-	Forced_Material_Override_Type(0x2C007440)(Studio_Render, nullptr, 0);
 }
+

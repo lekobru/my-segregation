@@ -62,7 +62,7 @@
 
 #include "Paint_Traverse.hpp"
 
-
+#include "Post_Data_Update.hpp"
 
 __int32 __stdcall DllMain(HMODULE This_Module, unsigned __int32 Call_Reason, void* Reserved)
 {
@@ -115,7 +115,7 @@ __int32 __stdcall DllMain(HMODULE This_Module, unsigned __int32 Call_Reason, voi
 
 				AllocConsole();
 
-				SetConsoleTitleW(L"Segregation");
+				SetConsoleTitleW(L"lewai");
 
 				_wfreopen(L"CONOUT$", L"w", stdout);
 
@@ -301,10 +301,31 @@ __int32 __stdcall DllMain(HMODULE This_Module, unsigned __int32 Call_Reason, voi
 
 				_putws(L"[ + ] View Effects");
 				{
-					Byte_Manager::Set_Bytes(1, (void*)604082898, 34, 144);
+					void* Surface = *(void**)608279384;
+
+					Byte_Manager::Set_Bytes(0, (void*)604082898, 34, 144);
+
 					interfaces::vgui_ipanel = global_utils::get_interface<void>("vgui2.dll", "VGUI_Panel009");
+
 					panel_hook = std::make_unique<vmt>(interfaces::vgui_ipanel);
-					panel_hook->hook(40, Redirected_Paint_Traverse); //hook paint trev
+
+					panel_hook->hook(40, Redirected_Paint_Traverse); //# paint traverse hook
+
+					using Create_Font_Type = unsigned long(__thiscall**)(void* Surface);
+
+					Esp_Font = (*Create_Font_Type(*(unsigned __int32*)Surface + 256))(Surface);
+
+					Esp_Font1 = (*Create_Font_Type(*(unsigned __int32*)Surface + 256))(Surface);
+
+					Indicator_Font = (*Create_Font_Type(*(unsigned __int32*)Surface + 256))(Surface);
+
+					using Set_Font_Glyph_Set_Type = __int8(__thiscall**)(void* Surface, unsigned long Font, char* Name, __int32 Tall, __int32 Weight, __int32 Unk1, __int32 Unk2, __int32 Flags);
+
+					(*Set_Font_Glyph_Set_Type(*(unsigned __int32*)Surface + 260))(Surface, Esp_Font, (char*)"Tahoma", 12, 800, 0, 0, 128);
+					
+					(*Set_Font_Glyph_Set_Type(*(unsigned __int32*)Surface + 260))(Surface, Esp_Font1, (char*)"Small Fonts", 8, 800, 0, 0, 512);
+
+					(*Set_Font_Glyph_Set_Type(*(unsigned __int32*)Surface + 260))(Surface, Indicator_Font, (char*)"Indicator", 8, 800, 0, 0, 64);
 				}
 
 				_putws(L"[ + ] Crosshair");

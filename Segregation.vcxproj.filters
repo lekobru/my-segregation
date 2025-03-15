@@ -91,38 +91,18 @@
     <ClInclude Include="Send_Datagram.hpp">
       <Filter>Header++</Filter>
     </ClInclude>
-    <ClInclude Include="Chams.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="Compute_First_Command_To_Execute.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="Fire_Bullet.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="global_utils.hpp">
+    <ClInclude Include="vmt.hpp">
       <Filter>Header++</Filter>
     </ClInclude>
     <ClInclude Include="interfaces.hpp">
       <Filter>Header++</Filter>
     </ClInclude>
-    <ClInclude Include="matrix.hpp">
+    <ClInclude Include="global_utils.hpp">
       <Filter>Header++</Filter>
     </ClInclude>
     <ClInclude Include="Paint_Traverse.hpp">
       <Filter>Header++</Filter>
     </ClInclude>
-    <ClInclude Include="Post_Entity_Packet_Received.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="Run_Simulation.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="Store_Prediction_Results.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
-    <ClInclude Include="vmt.hpp">
-      <Filter>Header++</Filter>
-    </ClInclude>
+    <ClInclude Include="matrix.hpp" />
   </ItemGroup>
 </Project>

@@ -49,10 +49,6 @@ Interface_Structure Interface_Second_Choked_Angle_Y;
 
 Interface_Structure Interface_Angle_Y;
 
-Interface_Structure Interface_Uber_Alles_Scale;
-
-Interface_Structure Interface_Uber_Alles_Speed;
-
 Interface_Structure Interface_Simulation_Height;
 
 Interface_Structure Interface_Simulation_Ticks;
@@ -68,6 +64,10 @@ Interface_Structure Interface_Chams;
 Interface_Structure Interface_Extrapolation;
 
 Interface_Structure Interface_Enemy_Check;
+
+Interface_Structure Interface_Target_On_Simulation;
+
+
 
 void Implement_Extended_Interface()
 {
@@ -97,9 +97,9 @@ void Implement_Extended_Interface()
 
 	Create_Interface(Pointer_Name(Interface_Set_Priority), (char*)"1 0", (void*)Set_Priority);
 
-	Create_Interface(Pointer_Name(Interface_Bruteforce_Memory_Tolerance), (char*)"1", (void*)Bruteforce_Reset_Memory_Tolerance);
+	Create_Interface(Pointer_Name(Interface_Bruteforce_Memory_Tolerance), (char*)"0", (void*)Bruteforce_Reset_Memory_Tolerance);
 
-	Create_Interface(Pointer_Name(Interface_Bruteforce_Tolerance), (char*)"1", (void*)Bruteforce_Reset_Tolerance);
+	Create_Interface(Pointer_Name(Interface_Bruteforce_Tolerance), (char*)"2", (void*)Bruteforce_Reset_Tolerance);
 
 	Create_Interface(Pointer_Name(Interface_Bruteforce), (char*)"1", (void*)Bruteforce_Reset);
 
@@ -119,15 +119,11 @@ void Implement_Extended_Interface()
 
 	Create_Interface(Pointer_Name(Interface_Angle_X), (char*)"180", nullptr);
 
-	Create_Interface(Pointer_Name(Interface_First_Choked_Angle_Y), (char*)"180", nullptr);
+	Create_Interface(Pointer_Name(Interface_First_Choked_Angle_Y), (char*)"-134", nullptr);
 
-	Create_Interface(Pointer_Name(Interface_Second_Choked_Angle_Y), (char*)"180", nullptr);
+	Create_Interface(Pointer_Name(Interface_Second_Choked_Angle_Y), (char*)"-134", nullptr);
 
 	Create_Interface(Pointer_Name(Interface_Angle_Y), (char*)"180", nullptr);
-
-	Create_Interface(Pointer_Name(Interface_Uber_Alles_Scale), (char*)"16", nullptr);
-
-	Create_Interface(Pointer_Name(Interface_Uber_Alles_Speed), (char*)"192", nullptr);
 
 	Create_Interface(Pointer_Name(Interface_Simulation_Height), (char*)"0", nullptr);
 
@@ -144,4 +140,7 @@ void Implement_Extended_Interface()
 	Create_Interface(Pointer_Name(Interface_Extrapolation), (char*)"1", nullptr);
 
 	Create_Interface(Pointer_Name(Interface_Enemy_Check), (char*)"1", nullptr);
+
+	Create_Interface(Pointer_Name(Interface_Target_On_Simulation), (char*)"1", nullptr);
+
 }
