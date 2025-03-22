@@ -1,5 +1,3 @@
-
-
 struct Command_Structure
 {
 	__int8 Additional_Bytes_1[4];
@@ -46,11 +44,13 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 	if (*(__int8*)((unsigned __int32)Local_Player + 135) == 0)
 	{
 		auto Angle_Vectors = [](float* Angles, float* Forward, float* Right, float* Up) -> void
-			{
-				using Angle_Vectors_Type = void(__cdecl*)(float* Angles, float* Forward, float* Right, float* Up);
+		{
+			using Angle_Vectors_Type = void(__cdecl*)(float* Angles, float* Forward, float* Right, float* Up);
 
-				Angle_Vectors_Type(606384752)(Angles, Forward, Right, Up);
-			};
+			Angle_Vectors_Type(606384752)(Angles, Forward, Right, Up);
+		};
+
+		__int32 Jump_State = (Command->Buttons & 2) + *(__int8*)((unsigned __int32)Local_Player + 308);
 
 		float Move_Angles[3] =
 		{
@@ -59,209 +59,53 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 			Command->Angles[1]
 		};
 
-		auto Vector_Normalize = [](float* Vector) -> float
-			{
-				using Vector_Normalize_Type = float(__thiscall*)(float* Vector);
-
-				return Vector_Normalize_Type(606378096)(Vector);
-			};
-
 		static float Previous_Move_Angle_Y;
 
-		if ((Command->Buttons & 2) + *(__int8*)((unsigned __int32)Local_Player + 308) == 4)
+		float* Velocity = (float*)((unsigned __int32)Local_Player + 224);
+
+		if (Jump_State == 4)
 		{
-			auto bhop = [&]() -> void
-				{
-					Command->Buttons |= 2;
-					if (*(__int32*)((unsigned __int32)Local_Player + 456) == -1)
-					{
-						Command->Buttons &= ~(*(__int32*)((unsigned __int32)Local_Player + 308) & 2);
-					}
-					else
-					{
-						Command->Buttons &= ~(*(__int32*)((unsigned __int32)Local_Player + 3420) & 2);
-					}
-				};
-			static float rotation;
-			if (Command->Buttons & 131072)
+			Command->Move[0] = 0;
+
+			if (*(void**)((unsigned __int32)Local_Player + 456) == INVALID_HANDLE_VALUE)
 			{
-				struct alignas(4) Ray_Structure
-				{
-					__int8 Additional_Bytes[50];
-				};
-				struct Filter_Structure
-				{
-					void* Table;
-					void* Skip;
-					__int32 Group;
-				};
-				struct Trace_Structure
-				{
-					__int8 Additional_Bytes_1[44];
-					float Fraction;
-					__int8 Additional_Bytes_2[36];
-				};
-				Ray_Structure ray;
-				Filter_Structure filter;
-				filter.Table = (void*)607282692;
-				filter.Skip = Local_Player;
-				filter.Group = 8;
-				Trace_Structure trace;
-				using Trace_Ray_Type = void(__thiscall*)(void* Engine, Ray_Structure* Ray, __int32 Mask, Filter_Structure* Filter, Trace_Structure* Trace);
-				using Initialize_Ray_Type = void(__thiscall*)(Ray_Structure* Ray, float* Start, float* End, float* Minimum, float* Maximum);
-				float* minimum = (float*)((unsigned __int32)608155796 + 24 * ((*(__int32*)((unsigned __int32)Local_Player + 692) & 2) == 2));
-				float* maximum = (float*)((unsigned __int32)608155808 + 24 * ((*(__int32*)((unsigned __int32)Local_Player + 692) & 2) == 2));
-				float* velocity = (float*)((unsigned __int32)Local_Player + 224);
-				float* origin = (float*)((unsigned __int32)Local_Player + 668);
-				Previous_Move_Angle_Y = Move_Angles[1];
-				auto determine_extra_rotation = [&](__int32 simulation_ticks) -> float
-					{
-						float extra_rotation = 0;
-						//run_command
-						{
-							float initial_friction = *(float*)((unsigned __int32)Local_Player + 3936);
-							float predicted_origin[3];
-							auto get_material = [&]() -> unsigned __int32
-								{
-									float end[3] = { origin[0], origin[1], origin[2] - 8192 };
-									Initialize_Ray_Type(604056560)(&ray, origin, end, minimum, maximum);
-									Trace_Ray_Type(537565888)((void*)540446304, &ray, 33636363, &filter, &trace);
-									return *(unsigned __int32*)((unsigned __int32)&trace + 60);
-								};
-							unsigned __int32 hold_material = get_material();
-							auto simulate_collision = [&]() -> __int8
-								{
-									Shot_Time *= -1;
-									Move_Angles[1] = rotation;
-									__int32 simulations_left = simulation_ticks;
-									auto prepare_return = [&](__int8 ret) -> __int8
-										{
-											predicted_origin[0] = origin[0];
-											predicted_origin[1] = origin[1];
-											predicted_origin[2] = origin[2];
-											Shot_Time *= -1;
-											*(float*)((unsigned __int32)Local_Player + 3936) = initial_friction;
-											using Run_Prediction_Type = void(__cdecl*)();
-											Run_Prediction_Type(537158848)();
-											return ret;
-										};
-									while (simulations_left--)
-									{
-										using Run_Command_Type = void(__thiscall*)(void* Prediction, void* Local_Player, Command_Structure* Command, void* Move_Helper);
-										bhop();
-										Command->Move[0] = 0;
-										Command->Move[1] = 400;
-										Move_Angles[1] = __builtin_remainderf(Move_Angles[1] - min(__builtin_atan2f(30, __builtin_hypotf(velocity[0], velocity[1])) * 180 / 3.1415927f, 90) - extra_rotation, 360);
-										//correct_movement
-										{
-											float Desired_Move_Forward[3];
-											float Desired_Move_Right[3];
-											Angle_Vectors(Move_Angles, Desired_Move_Forward, Desired_Move_Right, nullptr);
-											Desired_Move_Forward[2] = 0;
-											Vector_Normalize(Desired_Move_Forward);
-											Desired_Move_Right[2] = 0;
-											Vector_Normalize(Desired_Move_Right);
-											float Desired_Move[2] =
-											{
-												Desired_Move_Forward[0] * Command->Move[0] + Desired_Move_Right[0] * Command->Move[1],
-												Desired_Move_Forward[1] * Command->Move[0] + Desired_Move_Right[1] * Command->Move[1]
-											};
-											float Move_Forward[3];
-											float Move_Right[3];
-											Angle_Vectors(Command->Angles, Move_Forward, Move_Right, nullptr);
-											Move_Forward[2] = 0;
-											Vector_Normalize(Move_Forward);
-											Move_Right[2] = 0;
-											Vector_Normalize(Move_Right);
-											float Divider = Move_Forward[0] * Move_Right[1] - Move_Right[0] * Move_Forward[1];
-											Command->Move[0] = (__int16)((Desired_Move[0] * Move_Right[1] - Move_Right[0] * Desired_Move[1]) / Divider);
-											Command->Move[1] = (__int16)((Move_Forward[0] * Desired_Move[1] - Desired_Move[0] * Move_Forward[1]) / Divider);
-										}
-										void* Previous_Audio_Device = *(void**)542589456;
-										*(void**)542589456 = nullptr;
-										Run_Command_Type(605207600)(*(void**)540494880, Local_Player, Command, (void*)607735532);
-										*(void**)542589456 = Previous_Audio_Device;
-										*(__int32*)((unsigned __int32)Local_Player + 304) |= 4096;
-										//ground_check
-										if (1)
-										{
-											if (get_material() != hold_material)
-											{
-												return prepare_return(1);
-											}
-										}
-										//test_player_position
-										{
-											float extended_minimum[3] = { minimum[0] * 1.25f, minimum[1] * 1.25f, minimum[2] * 1 };
-											float extended_maximum[3] = { maximum[0] * 1.25f, maximum[1] * 1.25f, maximum[2] * Interface_Simulation_Height.Floating_Point };
-											Initialize_Ray_Type(604056560)(&ray, origin, origin, extended_minimum, extended_maximum);
-											Trace_Ray_Type(537565888)((void*)540446304, &ray, 33636363, &filter, &trace);
-											if (trace.Fraction != 1)
-											{
-												return prepare_return(1);
-											}
-										}
-									}
-									return prepare_return(0);
-								};
-							while (simulate_collision() == 1 && extra_rotation <= 90)
-							{
-								extra_rotation += 90 / Interface_Simulation_Rotation_Divisor.Floating_Point;
-							}
-							auto draw_box = [&](float* origin)
-								{
-									using AddBoxOverlay = void(__thiscall**)(void* debugoverlay, float* origin, float* mins, float* maxs, float* angles, int r, int g, int b, int a, float flDuration);
-									void* debugoverlay = *(void**)607906420;
-									static float angles[3];
-									(*AddBoxOverlay(*(DWORD*)debugoverlay + 4))(debugoverlay, origin, minimum, maximum, angles, 43, 233, 182, 50, (*(Global_Variables_Structure**)607726732)->Frame_Time * 2);
-								};
-							draw_box(predicted_origin);
-						}
-						return extra_rotation;
-					};
-				rotation = __builtin_remainderf(rotation - min(__builtin_atan2f(30, __builtin_hypotf(velocity[0], velocity[1])) * 180 / 3.1415927f, 90) - determine_extra_rotation(Interface_Simulation_Ticks.Integer), 360);
-				Command->Move[1] = 400;
-				Move_Angles[1] = rotation;
+				Command->Buttons &= ~2;
 			}
 			else
 			{
-				float Difference = __builtin_remainderf(Move_Angles[1] - Previous_Move_Angle_Y, 360);
+				Command->Buttons &= ~(*(__int32*)((unsigned __int32)Local_Player + 3420) & 2);
+			}
 
-				Previous_Move_Angle_Y = Move_Angles[1];
+			float Difference = __builtin_remainderf(Move_Angles[1] - Previous_Move_Angle_Y, 360.f);
 
-				float* Velocity = (float*)((unsigned __int32)Local_Player + 224);
+			Previous_Move_Angle_Y = Move_Angles[1];
 
-				if (__builtin_fabsf(Difference) < __builtin_atan2f(30, __builtin_hypotf(Velocity[0], Velocity[1])) * 180 / 3.1415927f)
+			if (__builtin_fabsf(Difference) < __builtin_atan2f(30.f, __builtin_hypotf(Velocity[0], Velocity[1])) * 180.f / 3.1415927f)
+			{
+				float Strafe_Angle = __builtin_remainderf(Move_Angles[1] - __builtin_atan2f(Velocity[1], Velocity[0]) * 180.f / 3.1415927f, 360.f);
+
+				if (__builtin_signbitf(Strafe_Angle) == 0)
 				{
-					float Strafe_Angle = __builtin_remainderf(Move_Angles[1] - __builtin_atan2f(Velocity[1], Velocity[0]) * 180 / 3.1415927f, 360);
-
-					if (__builtin_signbitf(Strafe_Angle) == 0)
-					{
-						Command->Move[1] = -400;
-					}
-					else
-					{
-						Command->Move[1] = 400;
-					}
-
-					Move_Angles[1] -= Strafe_Angle;
+					Command->Move[1] = -400.f;
 				}
 				else
 				{
-					if (__builtin_signbitf(Difference) == 0)
-					{
-						Command->Move[1] = -400;
-					}
-					else
-					{
-						Command->Move[1] = 400;
-					}
+					Command->Move[1] = 400.f;
 				}
 
-				rotation = Move_Angles[1];
+				Move_Angles[1] -= Strafe_Angle;
 			}
-			Command->Move[0] = 0;
-			bhop();
+			else
+			{
+				if (__builtin_signbitf(Difference) == 0)
+				{
+					Command->Move[1] = -400.f;
+				}
+				else
+				{
+					Command->Move[1] = 400.f;
+				}
+			}
 		}
 		else
 		{
@@ -280,6 +124,13 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 		Desired_Move_Forward[2] = 0.f;
 
+		auto Vector_Normalize = [](float* Vector) -> float
+		{
+			using Vector_Normalize_Type = float(__thiscall*)(float* Vector);
+
+			return Vector_Normalize_Type(606378096)(Vector);
+		};
+
 		Vector_Normalize(Desired_Move_Forward);
 
 		Desired_Move_Right[2] = 0.f;
@@ -294,39 +145,39 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 		};
 
 		auto Correct_Movement = [&]() -> void
+		{
+			float Move_Forward[3];
+
+			float Move_Right[3];
+
+			Angle_Vectors(Command->Angles, Move_Forward, Move_Right, nullptr);
+
+			Move_Forward[2] = 0.f;
+
+			Vector_Normalize(Move_Forward);
+
+			Move_Right[2] = 0.f;
+
+			Vector_Normalize(Move_Right);
+
+			float Divider = Move_Forward[0] * Move_Right[1] - Move_Right[0] * Move_Forward[1];
+
+			Command->Move[0] = (__int16)((Desired_Move[0] * Move_Right[1] - Move_Right[0] * Desired_Move[1]) / Divider);
+
+			Command->Buttons &= ~1560;
+
+			if (Command->Move[0] != 0)
 			{
-				float Move_Forward[3];
+				Command->Buttons |= 8 * (__builtin_signbitf(Command->Move[0]) + 1);
+			}
 
-				float Move_Right[3];
+			Command->Move[1] = (__int16)((Move_Forward[0] * Desired_Move[1] - Desired_Move[0] * Move_Forward[1]) / Divider);
 
-				Angle_Vectors(Command->Angles, Move_Forward, Move_Right, nullptr);
-
-				Move_Forward[2] = 0.f;
-
-				Vector_Normalize(Move_Forward);
-
-				Move_Right[2] = 0.f;
-
-				Vector_Normalize(Move_Right);
-
-				float Divider = Move_Forward[0] * Move_Right[1] - Move_Right[0] * Move_Forward[1];
-
-				Command->Move[0] = (__int16)((Desired_Move[0] * Move_Right[1] - Move_Right[0] * Desired_Move[1]) / Divider);
-
-				Command->Buttons &= ~1560;
-
-				if (Command->Move[0] != 0)
-				{
-					Command->Buttons |= 8 * (__builtin_signbitf(Command->Move[0]) + 1);
-				}
-
-				Command->Move[1] = (__int16)((Move_Forward[0] * Desired_Move[1] - Desired_Move[0] * Move_Forward[1]) / Divider);
-
-				if (Command->Move[1] != 0)
-				{
-					Command->Buttons |= 512 * ((__builtin_signbitf(Command->Move[1]) ^ 1) + 1);
-				}
-			};
+			if (Command->Move[1] != 0)
+			{
+				Command->Buttons |= 512 * ((__builtin_signbitf(Command->Move[1]) ^ 1) + 1);
+			}
+		};
 
 		Correct_Movement();
 
@@ -343,9 +194,51 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 			Byte_Manager::Copy_Bytes(1, Local_Previous_Origin, sizeof(Local_Previous_Origin), Local_Origin);
 		}
 
-		using Run_Command_Type = void(__thiscall*)(void* Prediction, void* Player, Command_Structure* Command, void* Move_Helper);
+		auto Predict = [&](__int8 Duck) -> void
+		{
+			Command->Buttons |= 4 * Duck;
 
-		Run_Command_Type(605207600)((void*)608163016, Local_Player, Command, (void*)607735532);
+			using Run_Command_Type = void(__thiscall*)(void* Prediction, void* Player, Command_Structure* Command, void* Move_Helper);
+
+			Run_Command_Type(605207600)((void*)608163016, Local_Player, Command, (void*)607735532);
+		};
+
+		if (Jump_State * (Interface_Duck_Advantage.Floating_Point != 0.f) == 4)
+		{
+			Predict(0);
+
+			auto Restore = [&]() -> float
+			{
+				Command->Buttons &= ~4;
+
+				float Speed = __builtin_hypotf(Velocity[0], Velocity[1]);
+
+				using Run_Prediction_Type = void(__cdecl*)();
+
+				Run_Prediction_Type(537158848)();
+
+				return Speed;
+			};
+
+			if (*(float*)((unsigned __int32)Local_Player + 220) == 64.f)
+			{
+				float Normal_Speed = Restore();
+
+				Predict(1);
+
+				float Duck_Speed = Restore();
+
+				Command->Buttons |= 4 * (Normal_Speed < Duck_Speed - Interface_Duck_Advantage.Floating_Point);
+			}
+			else
+			{
+				Restore();
+
+				Command->Buttons |= 4;
+			}
+		}
+
+		Predict(0);
 
 		*(void**)542589456 = Previous_Audio_Device;
 
@@ -387,7 +280,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 					{
 						Send_Packet = 0;
 
-					Predict_Dynamic_Send_Packet_Label:
+						Predict_Dynamic_Send_Packet_Label:
 						{
 							if (Predicted_Choked_Commands == Interface_Maximum_Choked_Commands.Integer)
 							{
@@ -405,7 +298,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 					}
 					else
 					{
-					Send_Packet_Label:
+						Send_Packet_Label:
 						{
 							Byte_Manager::Copy_Bytes(1, Local_Networked_Origin, sizeof(Local_Networked_Origin), Local_Origin);
 
@@ -452,8 +345,6 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 		__int32 Entity_Number = 1;
 
-
-
 		using Get_Latency_Type = float(__thiscall*)(void* Network_Channel, __int32 Type);
 
 		void* Network_Channel = *(void**)540608912;
@@ -485,7 +376,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 		Sorted_Target_List.clear();
 
-	Traverse_Entity_List_Label:
+		Traverse_Entity_List_Label:
 		{
 			Player_Data_Structure* Player_Data = &Players_Data[Entity_Number];
 
@@ -517,10 +408,6 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 									__builtin_powf(Local_Origin[0] - Entity_Origin[0], 2.f) + __builtin_powf(Local_Origin[1] - Entity_Origin[1], 2.f) + __builtin_powf(Local_Origin[2] - Entity_Origin[2], 2.f)
 								};
-								if (Interface_Target_On_Simulation.Integer != 0) 
-								{
-									Target.Valid *= Player_Data->Simulated;
-								}
 
 								Sorted_Target_List.push_back(Target);
 							}
@@ -538,21 +425,21 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 		}
 
 		auto Target_List_Sort_Prepare = [](Target_Structure& X, Target_Structure& Y) -> __int8
-			{
-				return X.Priority < Y.Priority;
-			};
+		{
+			return X.Priority < Y.Priority;
+		};
 
 		std::sort(Sorted_Target_List.begin(), Sorted_Target_List.end(), Target_List_Sort_Prepare);
 
 		auto Target_List_Sort_Finish = [](Target_Structure& X, Target_Structure& Y) -> __int8
+		{
+			if (X.Priority > Y.Priority)
 			{
-				if (X.Priority > Y.Priority)
-				{
-					return 1;
-				}
+				return 1;
+			}
 
-				return X.Distance < Y.Distance;
-			};
+			return X.Distance < Y.Distance;
+		};
 
 		std::sort(Sorted_Target_List.begin(), Sorted_Target_List.end(), Target_List_Sort_Finish);
 
@@ -564,7 +451,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 			{
 				if (Shot_Time == 0)
 				{
-				Passed_Shot_Time_Check_Label:
+					Passed_Shot_Time_Check_Label:
 					{
 						if ((Command->Buttons & 2048) == 0)
 						{
@@ -611,7 +498,9 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 							{
 								if (*(float*)((unsigned __int32)Local_Player + 2544) <= Global_Variables->Current_Time)
 								{
-									void* Weapon = *(void**)((unsigned __int32)607973860 + (((*(unsigned __int32*)((unsigned __int32)Local_Player + 2872) & 4095) - 4097) << 4));
+									using Get_Weapon_Type = void*(__thiscall*)(void* Entity);
+
+									void* Weapon = Get_Weapon_Type(604036352)(Local_Player);
 
 									if (Weapon != nullptr)
 									{
@@ -629,13 +518,13 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 													Get_Eye_Position_Type(604058320)(Local_Player, Eye_Position);
 
-													using Get_Weapon_Information_Type = void* (__thiscall*)(void* Weapon);
+													using Get_Weapon_Information_Type = void*(__thiscall*)(void* Weapon);
 
 													float Weapon_Range = *(float*)((unsigned __int32)Get_Weapon_Information_Type(604037872)(Weapon) + 2020);
 
 													Recent_Player_Data_Number = 0;
 
-												Traverse_Sorted_Target_List_Label:
+													Traverse_Sorted_Target_List_Label:
 													{
 														if (Target_Number != Sorted_Target_List.size())
 														{
@@ -652,83 +541,83 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 																if (Setup_Bones_Type(604209888)((void*)((unsigned __int32)Target->Self + 4), Bones, 128, 524032, Global_Variables->Current_Time) == 1)
 																{
 																	auto Perform_Trace = [&](float Direction[3]) -> __int8
+																	{
+																		struct alignas(4) Ray_Structure
 																		{
-																			struct alignas(4) Ray_Structure
-																			{
-																				__int8 Additional_Bytes[50];
-																			};
-
-																			struct Filter_Structure
-																			{
-																				void* Table;
-
-																				void* Skip;
-
-																				__int8 Additional_Bytes[4];
-																			};
-
-																			struct Trace_Structure
-																			{
-																				__int8 Additional_Bytes_1[68];
-
-																				__int32 Group;
-
-																				__int8 Additional_Bytes_2[4];
-
-																				void* Entity;
-
-																				__int8 Additional_Bytes_3[4];
-																			};
-
-																			using Perform_Trace_Type = void(__thiscall*)(void* Tracer, Ray_Structure* Ray, __int32 Mask, Filter_Structure* Filter, Trace_Structure* Trace);
-
-																			using Initialize_Ray_Type = void(__thiscall*)(Ray_Structure* Ray, float* Start, float* End);
-
-																			Ray_Structure Ray;
-
-																			Vector_Normalize(Direction);
-
-																			float End[3]
-																			{
-																				Eye_Position[0] + Direction[0] * Weapon_Range,
-
-																				Eye_Position[1] + Direction[1] * Weapon_Range,
-
-																				Eye_Position[2] + Direction[2] * Weapon_Range
-																			};
-
-																			Initialize_Ray_Type(537380224)(&Ray, Eye_Position, End);
-
-																			Filter_Structure Filter = { (void*)607282692, Local_Player };
-
-																			Trace_Structure Trace;
-
-																			Perform_Trace_Type(537565888)((void*)540446304, &Ray, 1174421515, &Filter, &Trace);
-
-																			using Clip_Trace = void(__cdecl*)(float* Start, float* End, __int32 Mask, Filter_Structure* Filter, Trace_Structure* Trace);
-
-																			End[0] += Direction[0] * 40.f;
-
-																			End[1] += Direction[1] * 40.f;
-
-																			End[2] += Direction[2] * 40.f;
-
-																			Clip_Trace(605426672)(Eye_Position, End, 1174421515, &Filter, &Trace);
-
-																			if (Trace.Entity == Target->Self)
-																			{
-																				if (Interface_Aim_Intersection.Integer == 0)
-																				{
-																					return Trace.Group == 1;
-																				}
-
-																				return 1;
-																			}
-
-																			return 0;
+																			__int8 Additional_Bytes[50];
 																		};
 
-																	using Get_Studio_Header_Type = void* (__thiscall*)(void* Entity);
+																		struct Filter_Structure
+																		{
+																			void* Table;
+
+																			void* Skip;
+
+																			__int8 Additional_Bytes[4];
+																		};
+
+																		struct Trace_Structure
+																		{
+																			__int8 Additional_Bytes_1[68];
+
+																			__int32 Group;
+
+																			__int8 Additional_Bytes_2[4];
+
+																			void* Entity;
+
+																			__int8 Additional_Bytes_3[4];
+																		};
+
+																		using Perform_Trace_Type = void(__thiscall*)(void* Tracer, Ray_Structure* Ray, __int32 Mask, Filter_Structure* Filter, Trace_Structure* Trace);
+
+																		using Initialize_Ray_Type = void(__thiscall*)(Ray_Structure* Ray, float* Start, float* End);
+
+																		Ray_Structure Ray;
+
+																		Vector_Normalize(Direction);
+
+																		float End[3]
+																		{
+																			Eye_Position[0] + Direction[0] * Weapon_Range,
+
+																			Eye_Position[1] + Direction[1] * Weapon_Range,
+
+																			Eye_Position[2] + Direction[2] * Weapon_Range
+																		};
+
+																		Initialize_Ray_Type(537380224)(&Ray, Eye_Position, End);
+
+																		Filter_Structure Filter = { (void*)607282692, Local_Player };
+
+																		Trace_Structure Trace;
+
+																		Perform_Trace_Type(537565888)((void*)540446304, &Ray, 1174421515, &Filter, &Trace);
+
+																		using Clip_Trace = void(__cdecl*)(float* Start, float* End, __int32 Mask, Filter_Structure* Filter, Trace_Structure* Trace);
+
+																		End[0] += Direction[0] * 40.f;
+
+																		End[1] += Direction[1] * 40.f;
+
+																		End[2] += Direction[2] * 40.f;
+
+																		Clip_Trace(605426672)(Eye_Position, End, 1174421515, &Filter, &Trace);
+
+																		if (Trace.Entity == Target->Self)
+																		{
+																			if (Interface_Aim_Intersection.Integer == 0)
+																			{
+																				return Trace.Group == 1;
+																			}
+
+																			return 1;
+																		}
+
+																		return 0;
+																	};
+
+																	using Get_Studio_Header_Type = void*(__thiscall*)(void* Entity);
 
 																	void* Studio_Header = *(void**)Get_Studio_Header_Type(604188448)(Target->Self);
 
@@ -839,7 +728,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 															goto Traverse_Sorted_Target_List_Label;
 
-														Found_Target_Label:
+															Found_Target_Label:
 															{
 
 															}
@@ -905,7 +794,7 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 
 														Weapon_Spread = 0.f;
 
-													Calculate_Rotation_Label:
+														Calculate_Rotation_Label:
 														{
 															Rotations[Calculation_Number][0][0] = Directions[Calculation_Number][0];
 
@@ -1042,9 +931,6 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 					Target_Origin[1] - Local_Origin[1]
 				};
 
-
-
-
 				if (Send_Packet == 0) {
 
 					if (Interface_At_Targets.Floating_Point == 1) {
@@ -1072,11 +958,9 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 						Command->Angles[1] += Interface_Angle_Y.Floating_Point + jitter(0.0, Interface_Jitter_Range.Floating_Point);
 					}
 				}
-
 			}
 			else
 			{
-
 				if (Interface_Enemy_Check.Integer == 0) //"remains accessible via console commands"
 				{
 					if (Send_Packet == 0)
@@ -1100,11 +984,10 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 			}
 		}
 
-
 		auto Compress_Angle = [](float Value, __int32 Shift) -> float
-			{
-				return ((__int32)(Value / 360.f * Shift) & Shift - 1) * (360.f / Shift);
-			};
+		{
+			return ((__int32)(Value / 360.f * Shift) & Shift - 1) * (360.f / Shift);
+		};
 
 		Command->Angles[0] = Compress_Angle(Command->Angles[0], 65536);
 
@@ -1113,8 +996,6 @@ void __thiscall Redirected_Copy_Command(void* Unknown_Parameter, Command_Structu
 		Command->Angles[2] = Compress_Angle(Command->Angles[2], 256);
 
 		Correct_Movement();
-
-
 
 		if (Send_Packet == 0)
 		{

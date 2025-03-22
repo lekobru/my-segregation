@@ -1,11 +1,12 @@
-__int32 Recent_Player_Data_Number;
+﻿float Shot_Time;
 
-float Shot_Time;
 
 void __stdcall Event_Processor(void* Event)
 {
 	void* Local_Player = *(void**)607867332;
-
+	char* KillSay[] = {
+	"noob"
+	};
 	if (Local_Player != nullptr)
 	{
 		using Get_Name_Type = char*(__thiscall*)(void* Event);
@@ -18,11 +19,26 @@ void __stdcall Event_Processor(void* Event)
 
 		__int32 Local_Number = *(__int32*)((unsigned __int32)Local_Player + 80);
 
+
+
 		if (Name[0] == 'p')
 		{
 			__int32 Victim_Number = Identifier_To_Number_Type(537020000)((void*)540435380, Get_Integer_Type(537579136)(Event, (char*)"userid", nullptr));
 
 			__int32 Killer_Number = Identifier_To_Number_Type(537020000)((void*)540435380, Get_Integer_Type(537579136)(Event, (char*)"attacker", nullptr));
+
+			if (Killer_Number == Local_Number)
+			{
+				// Verificar si Kill_Say est� activado antes de enviar el mensaje
+				if (Interface_Kill_Say.Integer == 1)
+				{
+					// Solo env�a un mensaje de Kill_Say cuando el jugador local realiza el asesinato
+					char killMessage[256];
+					sprintf(killMessage, "say %s", KillSay[0]);
+					using Client_Cmd_Type = void(__thiscall*)(void*, char*);
+					Client_Cmd_Type(537018048)((void*)540435380, killMessage);
+				}
+			}
 
 			if (Victim_Number != Killer_Number)
 			{
@@ -35,7 +51,6 @@ void __stdcall Event_Processor(void* Event)
 							Player_Data_Structure* Player_Data = &Players_Data[Killer_Number];
 
 							Player_Data->Memory_Tolerance = 0;
-
 						}
 					}
 					else
@@ -92,10 +107,6 @@ void __stdcall Event_Processor(void* Event)
 										}
 									}
 								}
-							}
-
-							if (Name[7] == 'd')
-							{
 							}
 						}
 					}
